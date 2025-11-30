@@ -246,7 +246,41 @@ function toggleTag(tag) {
 }
 
 async function syncNow() {
+  // Perform normal sync first
   await syncStore.sync()
+  
+  // Then refresh service worker cache
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+      if (registration) {
+        // Force update check
+        await registration.update()
+        
+        // Clear all caches to force fresh download
+        const cacheNames = await caches.keys()
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        )
+        
+        // If there's a waiting service worker, skip waiting and reload
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          // Wait a moment for the message to be processed
+          await new Promise(resolve => setTimeout(resolve, 500))
+          // Reload to activate the new service worker and get fresh cache
+          window.location.reload()
+          return
+        }
+        
+        // If no waiting worker, just reload to get fresh cache
+        // The service worker will re-cache everything on next load
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Failed to refresh cache:', error)
+    }
+  }
 }
 
 function handleConflictResolved() {
