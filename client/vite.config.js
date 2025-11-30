@@ -11,12 +11,36 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       workbox: {
-        // Precache all static assets including HTML
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot,json,webmanifest}'],
-        // Don't exclude anything from precaching
-        globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'],
+        // Precache all static assets - VitePWA automatically includes all build output
+        // The globPatterns tell it what to include from the dist folder
+        globPatterns: [
+          '**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot,json,webmanifest}'
+        ],
+        // Exclude service worker files from precaching
+        globIgnores: [
+          '**/node_modules/**/*',
+          '**/sw.js',
+          '**/sw.js.map',
+          '**/workbox-*.js',
+          '**/workbox-*.js.map',
+          '**/manifest.webmanifest'
+        ],
         // Maximum file size to precache (50MB)
         maximumFileSizeToCacheInBytes: 50 * 1024 * 1024,
+        // Ensure all HTML files are precached
+        manifestTransforms: [
+          async (entries) => {
+            // Ensure index.html is always in the manifest
+            const hasIndex = entries.some(entry => entry.url === '/index.html' || entry.url === 'index.html')
+            if (!hasIndex) {
+              entries.push({
+                url: '/index.html',
+                revision: null // Let workbox handle revisioning
+              })
+            }
+            return { manifest: entries }
+          }
+        ],
         runtimeCaching: [
           {
             urlPattern: /\/api\//,
@@ -41,9 +65,9 @@ export default defineConfig({
             }
           }
         ],
-        // Use CacheFirst for app shell - serve from cache when offline
+        // Use navigateFallback to serve index.html for all routes when offline
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\/[^/?]+\.[^/]+$/],
         // Clean up old caches
         cleanupOutdatedCaches: true,
         // Skip waiting to activate immediately
