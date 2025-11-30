@@ -25,10 +25,15 @@ export const useNotesStore = defineStore('notes', () => {
     
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()
-      filtered = filtered.filter(n =>
-        n.title.toLowerCase().includes(query) ||
-        n.content.toLowerCase().includes(query)
-      )
+      filtered = filtered.filter(n => {
+        // Search in title
+        if (n.title && n.title.toLowerCase().includes(query)) return true
+        // Search in content
+        if (n.content && n.content.toLowerCase().includes(query)) return true
+        // Search in tags
+        if (n.tags && n.tags.some(tag => tag.toLowerCase().includes(query))) return true
+        return false
+      })
     }
     
     if (selectedTag.value) {

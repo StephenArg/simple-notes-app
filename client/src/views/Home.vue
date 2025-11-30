@@ -78,26 +78,6 @@
         />
       </div>
       
-      <!-- Tags -->
-      <div v-if="allTags.length > 0" class="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Tags</h2>
-        <div class="flex flex-wrap gap-1">
-          <button
-            v-for="tag in allTags"
-            :key="tag"
-            @click="toggleTag(tag)"
-            :class="[
-              'px-2 py-1 text-xs rounded',
-              selectedTag === tag
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-            ]"
-          >
-            {{ tag }}
-          </button>
-        </div>
-      </div>
-      
       <!-- Notes List -->
       <div class="flex-1 overflow-y-auto">
         <div v-if="filteredNotes.length === 0" class="p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -128,6 +108,26 @@
             </span>
           </div>
         </button>
+      </div>
+      
+      <!-- Tags -->
+      <div v-if="allTags.length > 0" class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Tags</h2>
+        <div class="flex flex-wrap gap-1">
+          <button
+            v-for="tag in allTags"
+            :key="tag"
+            @click="toggleTag(tag)"
+            :class="[
+              'px-2 py-1 text-xs rounded',
+              selectedTag === tag
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            ]"
+          >
+            {{ tag }}
+          </button>
+        </div>
       </div>
       
       <!-- Status -->

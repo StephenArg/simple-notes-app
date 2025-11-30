@@ -145,7 +145,7 @@
             class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Image"
           >
-            🖼️
+            🌃
           </button>
           <button
             @click="insertCodeBlock"
@@ -184,6 +184,7 @@
         v-if="editorMode === 'preview' || splitView"
         class="flex-1 overflow-auto p-4 prose prose-sm dark:prose-invert max-w-none"
         :class="{ 'w-1/2': splitView }"
+        @click="handlePreviewClick"
       >
         <div v-html="renderedMarkdown" class="markdown-content"></div>
       </div>
@@ -621,6 +622,52 @@ function insertCheckbox() {
   onContentChange()
 }
 
+function handlePreviewClick(event) {
+  // Handle checkbox clicks in preview
+  const target = event.target
+  if (target.type === 'checkbox') {
+    event.preventDefault()
+    event.stopPropagation()
+    
+    // Get all checkboxes in the preview in order
+    const markdownContent = target.closest('.markdown-content')
+    if (!markdownContent) return
+    
+    const allCheckboxes = Array.from(markdownContent.querySelectorAll('input[type="checkbox"]'))
+    const checkboxIndex = allCheckboxes.indexOf(target)
+    
+    if (checkboxIndex === -1) return
+    
+    // Find all checkbox lines in markdown in order
+    const lines = content.value.split('\n')
+    const checkboxLineIndices = []
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      if (line.match(/^(\s*)([-*+])\s+\[([ x])\]\s/)) {
+        checkboxLineIndices.push(i)
+      }
+    }
+    
+    // Update the checkbox at the matching index
+    if (checkboxIndex < checkboxLineIndices.length) {
+      const lineIndex = checkboxLineIndices[checkboxIndex]
+      const line = lines[lineIndex]
+      const checkboxMatch = line.match(/^(\s*)([-*+])\s+\[([ x])\]\s(.+)$/)
+      
+      if (checkboxMatch) {
+        // Toggle the checkbox
+        const isChecked = checkboxMatch[3] === 'x'
+        const newState = isChecked ? ' ' : 'x'
+        const newLine = line.replace(/\[([ x])\]/, `[${newState}]`)
+        lines[lineIndex] = newLine
+        content.value = lines.join('\n')
+        onContentChange()
+      }
+    }
+  }
+}
+
 function handleKeydown(event) {
   // Handle Enter key for list continuation
   if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
@@ -632,11 +679,33 @@ function handleKeydown(event) {
     const lines = beforeText.split('\n')
     const currentLine = lines[lines.length - 1]
     
+    // Check if we're in a checkbox
+    const checkboxMatch = currentLine.match(/^(\s*)([-*+])\s+\[([ x])\]\s/)
+    
     // Check if we're in a list
-    const bulletMatch = currentLine.match(/^(\s*)([-*+])\s/)
+    const bulletMatch = currentLine.match(/^(\s*)([-*+])\s(?!\[)/) // Not a checkbox
     const numberedMatch = currentLine.match(/^(\s*)(\d+)\.\s/)
     
-    if (bulletMatch) {
+    if (checkboxMatch) {
+      // Continue checkbox list
+      event.preventDefault()
+      const indent = checkboxMatch[1]
+      const bullet = checkboxMatch[2]
+      const newLine = '\n' + indent + bullet + ' [ ] '
+      
+      const beforeCursor = content.value.substring(0, start)
+      const afterCursor = content.value.substring(start)
+      const newContent = beforeCursor + newLine + afterCursor
+      content.value = newContent
+      
+      setTimeout(() => {
+        textarea.focus()
+        const newCursorPos = start + newLine.length
+        textarea.setSelectionRange(newCursorPos, newCursorPos)
+      }, 0)
+      
+      onContentChange()
+    } else if (bulletMatch) {
       // Continue bullet list
       event.preventDefault()
       const indent = bulletMatch[1]
@@ -679,10 +748,11 @@ function handleKeydown(event) {
       // Check if previous line was a list item - if so, exit list on double Enter
       if (lines.length >= 2) {
         const prevLine = lines[lines.length - 2]
-        const prevBulletMatch = prevLine.match(/^(\s*)([-*+])\s/)
+        const prevCheckboxMatch = prevLine.match(/^(\s*)([-*+])\s+\[([ x])\]\s/)
+        const prevBulletMatch = prevLine.match(/^(\s*)([-*+])\s(?!\[)/) // Not a checkbox
         const prevNumberedMatch = prevLine.match(/^(\s*)(\d+)\.\s/)
         
-        if (prevBulletMatch || prevNumberedMatch) {
+        if (prevCheckboxMatch || prevBulletMatch || prevNumberedMatch) {
           // This is a double Enter - exit the list by not adding list marker
           // Just let the default Enter behavior happen (already on empty line)
           return
