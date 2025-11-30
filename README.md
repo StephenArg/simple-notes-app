@@ -29,11 +29,37 @@ A self-hosted, offline-first notes application inspired by [flatnotes](https://g
 
 ## Setup
 
-### Prerequisites
+### Docker (Recommended)
+
+The easiest way to run the application is using Docker Compose:
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+The application will be available at:
+- **Application**: http://localhost:3000 (serves both frontend and API)
+- **API Docs**: http://localhost:3000/docs
+- **API Endpoint**: http://localhost:3000/api
+
+**Note**: Only port 3000 is exposed. The server runs internally and is proxied through the client container. This makes it easy to run behind a reverse proxy.
+
+Notes are persisted in `./server/notes/` directory on your host machine.
+
+### Manual Setup
+
+#### Prerequisites
 - Node.js 18+ (for client)
 - Python 3.9+ (for server)
 
-### Client Setup
+#### Client Setup
 
 ```bash
 cd client
@@ -43,7 +69,7 @@ npm run dev
 
 The client will run on `http://localhost:5173` (or another port if 5173 is taken).
 
-### Server Setup
+#### Server Setup
 
 ```bash
 cd server
