@@ -7,10 +7,15 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useSyncStore } from './stores/sync'
+import { useSettingsStore } from './stores/settings'
 
 const syncStore = useSyncStore()
+const settingsStore = useSettingsStore()
 
 onMounted(() => {
+  // Load settings
+  settingsStore.loadSettings()
+  
   // Load notes from IndexedDB on startup
   syncStore.loadLocalNotes()
   

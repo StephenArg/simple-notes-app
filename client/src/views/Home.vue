@@ -20,6 +20,41 @@
           >
             {{ isSyncing ? '⏳' : '🔄' }}
           </button>
+          <button
+            @click="showSettings = !showSettings"
+            class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
+        
+        <!-- Settings Panel -->
+        <div v-if="showSettings" class="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Settings</h3>
+          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input
+              type="checkbox"
+              v-model="settingsStore.autoSaveEnabled"
+              @change="settingsStore.setAutoSaveEnabled(settingsStore.autoSaveEnabled)"
+              class="rounded"
+            />
+            <span>Auto-save enabled</span>
+          </label>
+          <div v-if="settingsStore.autoSaveEnabled" class="mt-2">
+            <label class="text-xs text-gray-600 dark:text-gray-400">
+              Auto-save delay: {{ settingsStore.autoSaveDelay / 1000 }}s
+            </label>
+            <input
+              type="range"
+              :value="settingsStore.autoSaveDelay"
+              @input="settingsStore.setAutoSaveDelay(parseInt($event.target.value))"
+              min="5000"
+              max="60000"
+              step="5000"
+              class="w-full mt-1"
+            />
+          </div>
         </div>
       </div>
       
@@ -120,13 +155,16 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotesStore } from '../stores/notes'
 import { useSyncStore } from '../stores/sync'
+import { useSettingsStore } from '../stores/settings'
 import ConflictResolution from '../components/ConflictResolution.vue'
 
 const router = useRouter()
 const notesStore = useNotesStore()
 const syncStore = useSyncStore()
+const settingsStore = useSettingsStore()
 
 const searchQuery = ref('')
+const showSettings = ref(false)
 const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const selectedNoteId = computed(() => notesStore.selectedNoteId)
 const filteredNotes = computed(() => notesStore.filteredNotes)

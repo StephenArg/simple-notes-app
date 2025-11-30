@@ -98,20 +98,27 @@ export const useNotesStore = defineStore('notes', () => {
     const note = notes.value.find(n => n.id === id)
     if (!note) return
     
-    // Mark as locally deleted
-    await updateNote(id, { locallyDeleted: true })
+    // Remove from local store immediately
+    notes.value = notes.value.filter(n => n.id !== id)
+    await db.deleteNote(id)
+    
+    if (selectedNoteId.value === id) {
+      selectedNoteId.value = null
+    }
+    
+    // Mark as locally deleted and try to sync
+    const deletedNote = {
+      ...note,
+      locallyDeleted: true,
+      updatedAt: new Date().toISOString()
+    }
+    await db.saveNote(deletedNote)
     
     // If online, try to delete on server immediately
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       try {
         const { syncPush } = await import('../services/api.js')
         await syncPush([{ id, deleted: true }])
-        // If successful, remove from local store
-        notes.value = notes.value.filter(n => n.id !== id)
-        await db.deleteNote(id)
-        if (selectedNoteId.value === id) {
-          selectedNoteId.value = null
-        }
       } catch (error) {
         console.error('Failed to delete on server:', error)
         // Keep locally deleted flag for sync later
