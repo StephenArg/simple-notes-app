@@ -8,7 +8,7 @@ Dockge is a Docker Compose management UI that can clone and manage repositories 
    - **Name**: `simple-notes-app` (or any name you prefer)
    - **Git Repository URL**: `https://github.com/StephenArg/simple-notes-app.git`
    - **Branch**: `main` (or your default branch)
-   - **Compose File Path**: `docker-compose.yml`
+   - **Compose File Path**: `compose.yaml` (or `docker-compose.yml` - both work)
 
 2. **Dockge will automatically:**
    - Clone the repository
@@ -40,10 +40,49 @@ To update the stack:
 
 ## Troubleshooting
 
-If you see path errors:
-- Make sure the `docker-compose.yml` file is in the repository root
-- Verify that both `client/` and `server/` directories exist in the cloned repo
-- Check that Dockge cloned the entire repository (not just a subdirectory)
+### "path not found" or "unable to prepare context" errors
+
+If you see errors like:
+```
+unable to prepare context: path "/opt/stacks/simple-notes/server" not found
+```
+
+**Solution:**
+
+1. **Verify the repository structure:**
+   - In Dockge, click on your stack
+   - Check the file browser to ensure both `client/` and `server/` directories exist
+   - Verify `compose.yaml` (or `docker-compose.yml`) is in the root
+
+2. **Check compose file path in Dockge:**
+   - Go to stack settings
+   - Make sure "Compose File Path" is set to `compose.yaml` (or `docker-compose.yml`)
+   - The path should be relative to the repository root
+
+3. **Re-clone the repository:**
+   - In Dockge, click "Update" on your stack
+   - This will pull the latest changes and re-clone if needed
+   - Or delete and recreate the stack
+
+4. **Verify Git repository URL:**
+   - Make sure you're using: `https://github.com/StephenArg/simple-notes-app.git`
+   - Check that the branch is `main`
+
+5. **Manual verification (SSH into server):**
+   ```bash
+   # Check if directories exist
+   ls -la /opt/stacks/simple-notes/
+   # Should show: client/, server/, compose.yaml, README.md, etc.
+   
+   # If missing, the repo might not have cloned correctly
+   cd /opt/stacks/simple-notes
+   git status
+   ```
+
+### Other common issues
+
+- **"version is obsolete" warning**: This is just a warning, not an error. The `compose.yaml` file doesn't include the version field.
+- **Build fails**: Make sure Docker has enough resources and internet access to pull base images
 
 ## Alternative: Manual Clone
 

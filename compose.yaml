@@ -1,0 +1,44 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: notes-app-server
+    # No external ports - only accessible internally via Docker network
+    expose:
+      - "8000"
+    volumes:
+      - ./server/notes:/app/notes
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE=/api
+    container_name: notes-app-client
+    ports:
+      - "3000:80"  # Single port exposed - reverse proxy should forward here
+    depends_on:
+      - server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: notes-app-network
+
