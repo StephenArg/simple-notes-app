@@ -7,9 +7,15 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}'],
+        // Precache all static assets
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot,json}'],
+        // Don't exclude anything from precaching
+        globIgnores: ['**/node_modules/**/*'],
+        // Maximum file size to precache (50MB)
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /\/api\//,
@@ -34,9 +40,14 @@ export default defineConfig({
             }
           }
         ],
-        // Use CacheFirst for app shell
+        // Use CacheFirst for app shell - serve from cache when offline
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/]
+        navigateFallbackDenylist: [/^\/api/],
+        // Clean up old caches
+        cleanupOutdatedCaches: true,
+        // Skip waiting to activate immediately
+        skipWaiting: true,
+        clientsClaim: true
       },
       manifest: {
         name: 'Notes App',
