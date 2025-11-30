@@ -9,16 +9,38 @@ This guide explains how to run the Notes App using Docker and Docker Compose.
 
 ## Quick Start
 
+### Option 1: Using Dockge (Recommended)
+
+If you're using [Dockge](https://github.com/louislam/dockge), you can directly clone the repository:
+
+1. In Dockge, create a new stack
+2. Enter your Git repository URL
+3. Set the compose file path to `docker-compose.yml`
+4. Dockge will clone and manage everything automatically
+
+See [DOCKGE.md](./DOCKGE.md) for detailed Dockge setup instructions.
+
+### Option 2: Manual Setup
+
 1. **Clone the repository** (if you haven't already):
    ```bash
-   git clone <your-repo-url>
-   cd notes-app
+   git clone https://github.com/StephenArg/simple-notes-app.git
+   cd simple-notes-app
    ```
 
-2. **Start the application**:
+2. **Make sure you're in the project root directory**:
+   ```bash
+   # Verify you're in the right directory
+   ls -la
+   # You should see: client/, server/, docker-compose.yml
+   ```
+
+3. **Start the application**:
    ```bash
    docker-compose up -d
    ```
+
+**Important**: The `docker-compose.yml` file uses relative paths (`./server`, `./client`), so it must be run from the project root directory where both `client/` and `server/` folders exist. This works automatically when using Dockge's git integration.
 
 3. **Access the application**:
    - Application: http://localhost:3000 (serves both frontend and API)
