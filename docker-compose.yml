@@ -11,6 +11,9 @@ services:
       - ./server/notes:/app/notes
     environment:
       - PYTHONUNBUFFERED=1
+      - NOTES_USERNAME=${NOTES_USERNAME:-admin}
+      - NOTES_PASSWORD=${NOTES_PASSWORD:-changeme}
+      - NOTES_SECRET_KEY=${NOTES_SECRET_KEY:-change-this-secret-key-in-production}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]

@@ -4,7 +4,16 @@
     <aside class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <!-- Header -->
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Notes</h1>
+        <div class="flex items-center justify-between mb-2">
+          <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Notes</h1>
+          <button
+            @click="handleLogout"
+            class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            title="Logout"
+          >
+            Logout
+          </button>
+        </div>
         <div class="mt-2 flex gap-2">
           <button
             @click="createNewNote"
@@ -156,12 +165,14 @@ import { useRouter } from 'vue-router'
 import { useNotesStore } from '../stores/notes'
 import { useSyncStore } from '../stores/sync'
 import { useSettingsStore } from '../stores/settings'
+import { useAuthStore } from '../stores/auth'
 import ConflictResolution from '../components/ConflictResolution.vue'
 
 const router = useRouter()
 const notesStore = useNotesStore()
 const syncStore = useSyncStore()
 const settingsStore = useSettingsStore()
+const authStore = useAuthStore()
 
 const searchQuery = ref('')
 const showSettings = ref(false)
@@ -246,6 +257,11 @@ function handleConflictResolved() {
 
 function handleConflictClose() {
   // Close handler if needed
+}
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
 }
 </script>
 

@@ -2,7 +2,7 @@
   <div v-if="note" class="h-full flex flex-col">
     <!-- Editor Header -->
     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <div class="flex items-center gap-2 mb-2">
+      <div class="flex items-center gap-2">
         <button
           @click="goHome"
           class="px-2 py-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
@@ -11,15 +11,17 @@
           ← Back
         </button>
         <input
+          ref="titleInputRef"
           v-model="title"
           @input="onTitleChange"
+          @focus="onTitleFocus"
           type="text"
           placeholder="Note title..."
           class="flex-1 text-2xl font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400"
         />
         <button
           @click="manualSave"
-          :disabled="!hasUnsavedChanges"
+          :disabled="!canSave"
           class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Save now"
         >
@@ -33,15 +35,7 @@
           Delete
         </button>
       </div>
-      <div class="flex items-center gap-2">
-        <input
-          v-model="tagsInput"
-          @blur="updateTags"
-          @keydown.enter.prevent="updateTags"
-          type="text"
-          placeholder="Tags (comma-separated)"
-          class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-        />
+      <div class="flex items-center gap-2 mt-2">
         <div class="flex items-center gap-2">
           <button
             @click="toggleEditMode"
@@ -58,22 +52,123 @@
           </button>
         </div>
       </div>
+      <!-- Duplicate title warning -->
+      <div v-if="duplicateTitleWarning" class="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
+        ⚠️ A note with this title already exists: "{{ duplicateTitleWarning }}"
+      </div>
     </div>
     
     <!-- Editor/Preview Area -->
-    <div class="flex-1 overflow-hidden flex" :class="{ 'flex-row': splitView && editorMode === 'preview' }">
+    <div class="flex-1 overflow-hidden flex flex-col" :class="{ 'flex-row': splitView && editorMode === 'preview' }">
       <!-- Editor -->
       <div 
         v-if="editorMode === 'edit' || (editorMode === 'preview' && splitView)"
-        class="flex-1 overflow-auto p-4 border-r border-gray-200 dark:border-gray-700"
+        class="flex-1 overflow-hidden flex flex-col border-r border-gray-200 dark:border-gray-700"
         :class="{ 'w-1/2': splitView && editorMode === 'preview' }"
       >
+        <!-- Markdown Toolbar -->
+        <div class="flex items-center gap-1 p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex-wrap">
+          <button
+            @click="insertMarkdown('**', '**')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Bold"
+          >
+            <strong>B</strong>
+          </button>
+          <button
+            @click="insertMarkdown('*', '*')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded italic"
+            title="Italic"
+          >
+            I
+          </button>
+          <button
+            @click="insertMarkdown('`', '`')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded font-mono"
+            title="Inline code"
+          >
+            &lt;/&gt;
+          </button>
+          <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <button
+            @click="insertMarkdown('# ', '')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Heading"
+          >
+            H
+          </button>
+          <button
+            @click="insertMarkdown('## ', '')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Heading 2"
+          >
+            H2
+          </button>
+          <button
+            @click="insertMarkdown('### ', '')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Heading 3"
+          >
+            H3
+          </button>
+          <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <button
+            @click="insertMarkdown('- ', '')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Bullet list"
+          >
+            •
+          </button>
+          <button
+            @click="insertMarkdown('1. ', '')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Numbered list"
+          >
+            1.
+          </button>
+          <button
+            @click="insertMarkdown('> ', '')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Blockquote"
+          >
+            "
+          </button>
+          <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <button
+            @click="insertMarkdown('[', '](url)')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Link"
+          >
+            🔗
+          </button>
+          <button
+            @click="insertMarkdown('![', '](url)')"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Image"
+          >
+            🖼️
+          </button>
+          <button
+            @click="insertCodeBlock"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded font-mono"
+            title="Code block"
+          >
+            ```
+          </button>
+          <button
+            @click="insertHorizontalRule"
+            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            title="Horizontal rule"
+          >
+            ─
+          </button>
+        </div>
         <textarea
           ref="editorRef"
           v-model="content"
           @input="onContentChange"
           placeholder="Start writing markdown..."
-          class="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 font-mono text-sm leading-relaxed"
+          class="flex-1 p-4 resize-none border-none outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 font-mono text-sm leading-relaxed"
         />
       </div>
       
@@ -87,9 +182,19 @@
       </div>
     </div>
     
-    <!-- Footer -->
-    <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-      <div class="flex justify-between items-center">
+    <!-- Footer with Tags -->
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-2 mb-2">
+        <input
+          v-model="tagsInput"
+          @blur="updateTags"
+          @keydown.enter.prevent="updateTags"
+          type="text"
+          placeholder="Tags (comma-separated)"
+          class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
         <span>Updated: {{ formatTime(note.updatedAt) }}</span>
         <div class="flex items-center gap-3">
           <span v-if="hasUnsavedChanges" class="text-yellow-600 dark:text-yellow-400">
@@ -137,16 +242,47 @@ const title = ref('')
 const content = ref('')
 const tagsInput = ref('')
 const editorRef = ref(null)
+const titleInputRef = ref(null)
 const editorMode = ref('edit') // 'edit' or 'preview'
 const splitView = ref(false)
+const localTitle = ref('')
+const localContent = ref('')
 
 // Auto-save
 const autoSaveTimer = ref(null)
 const autoSaveCountdown = ref(0)
 const countdownTimer = ref(null)
+
+// Track if we have local changes that haven't been saved
+const hasLocalChanges = computed(() => {
+  if (!note.value) return false
+  return localTitle.value !== (note.value.title || '') || 
+         localContent.value !== (note.value.content || '')
+})
+
 const hasUnsavedChanges = computed(() => {
   if (!note.value) return false
-  return note.value.currentLocalHash !== note.value.originalHash
+  return hasLocalChanges.value || note.value.currentLocalHash !== note.value.originalHash
+})
+
+// Check if save is allowed (needs title and content)
+const canSave = computed(() => {
+  const titleTrimmed = title.value.trim()
+  const contentTrimmed = content.value.trim()
+  return hasLocalChanges.value && titleTrimmed.length > 0 && contentTrimmed.length > 0
+})
+
+// Check for duplicate titles
+const duplicateTitleWarning = computed(() => {
+  if (!title.value.trim() || !note.value) return null
+  const trimmedTitle = title.value.trim()
+  const duplicate = notesStore.notes.find(n => 
+    n.id !== note.value.id && 
+    !n.locallyDeleted && 
+    !n.serverDeleted &&
+    n.title?.trim().toLowerCase() === trimmedTitle.toLowerCase()
+  )
+  return duplicate ? duplicate.title : null
 })
 
 const autoSaveEnabled = computed(() => settingsStore.autoSaveEnabled)
@@ -167,6 +303,8 @@ watch(note, (newNote) => {
     title.value = newNote.title || ''
     content.value = newNote.content || ''
     tagsInput.value = newNote.tags?.join(', ') || ''
+    localTitle.value = newNote.title || ''
+    localContent.value = newNote.content || ''
     cancelAutoSave()
   }
 }, { immediate: true })
@@ -185,18 +323,19 @@ onUnmounted(() => {
   cancelAutoSave()
 })
 
-function onTitleChange() {
-  if (note.value) {
-    notesStore.updateNote(note.value.id, { title: title.value })
-    scheduleAutoSave()
+function onTitleFocus() {
+  // Clear "Untitled" placeholder when focused
+  if (title.value.trim() === 'Untitled' || title.value.trim() === '') {
+    title.value = ''
   }
 }
 
+function onTitleChange() {
+  scheduleAutoSave()
+}
+
 function onContentChange() {
-  if (note.value) {
-    // Don't update immediately - wait for auto-save or manual save
-    scheduleAutoSave()
-  }
+  scheduleAutoSave()
 }
 
 function scheduleAutoSave() {
@@ -237,14 +376,27 @@ function cancelAutoSave() {
 async function saveNote() {
   if (!note.value) return
   
+  const titleTrimmed = title.value.trim()
+  const contentTrimmed = content.value.trim()
+  
+  // Don't save if title or content is empty
+  if (!titleTrimmed || !contentTrimmed) {
+    return
+  }
+  
   cancelAutoSave()
   await notesStore.updateNote(note.value.id, { 
-    content: content.value,
-    title: title.value
+    content: contentTrimmed,
+    title: titleTrimmed
   })
+  
+  // Update local tracking
+  localTitle.value = titleTrimmed
+  localContent.value = contentTrimmed
 }
 
 async function manualSave() {
+  if (!canSave.value) return
   await saveNote()
 }
 
@@ -283,6 +435,99 @@ function formatTime(isoString) {
   if (!isoString) return ''
   const date = new Date(isoString)
   return date.toLocaleString()
+}
+
+function insertMarkdown(before, after) {
+  if (!editorRef.value) return
+  
+  const textarea = editorRef.value
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selectedText = content.value.substring(start, end)
+  const beforeText = content.value.substring(0, start)
+  const afterText = content.value.substring(end)
+  
+  // If text is selected, wrap it
+  if (selectedText) {
+    const newText = beforeText + before + selectedText + after + afterText
+    content.value = newText
+    
+    // Set cursor position after the inserted markdown
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + before.length + selectedText.length + after.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  } else {
+    // No selection, insert markdown and place cursor in the middle
+    const newText = beforeText + before + after + afterText
+    content.value = newText
+    
+    // Set cursor position between the markdown symbols
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + before.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
+  
+  onContentChange()
+}
+
+function insertCodeBlock() {
+  if (!editorRef.value) return
+  
+  const textarea = editorRef.value
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selectedText = content.value.substring(start, end)
+  const beforeText = content.value.substring(0, start)
+  const afterText = content.value.substring(end)
+  
+  if (selectedText) {
+    // Wrap selected text in code block
+    const newText = beforeText + '```\n' + selectedText + '\n```' + afterText
+    content.value = newText
+    
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + 4 + selectedText.length + 1
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  } else {
+    // Insert empty code block
+    const newText = beforeText + '```\n\n```' + afterText
+    content.value = newText
+    
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + 4
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
+  
+  onContentChange()
+}
+
+function insertHorizontalRule() {
+  if (!editorRef.value) return
+  
+  const textarea = editorRef.value
+  const start = textarea.selectionStart
+  const beforeText = content.value.substring(0, start)
+  const afterText = content.value.substring(start)
+  
+  // Insert horizontal rule with newlines
+  const newText = beforeText + (beforeText && !beforeText.endsWith('\n') ? '\n' : '') + '---\n' + afterText
+  content.value = newText
+  
+  setTimeout(() => {
+    textarea.focus()
+    const newCursorPos = start + (beforeText && !beforeText.endsWith('\n') ? 1 : 0) + 4
+    textarea.setSelectionRange(newCursorPos, newCursorPos)
+  }, 0)
+  
+  onContentChange()
 }
 </script>
 

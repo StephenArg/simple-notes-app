@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -8,6 +8,23 @@ import os
 import json
 import hashlib
 from pathlib import Path
+try:
+    from auth import (
+        verify_password, 
+        create_access_token, 
+        get_current_user,
+        USERNAME,
+        PASSWORD_HASH
+    )
+except ImportError:
+    # Fallback for relative import
+    from .auth import (
+        verify_password, 
+        create_access_token, 
+        get_current_user,
+        USERNAME,
+        PASSWORD_HASH
+    )
 
 app = FastAPI(title="Notes App API")
 
@@ -128,14 +145,44 @@ class SyncPushItem(BaseModel):
 class SyncPushRequest(BaseModel):
     changes: List[SyncPushItem]
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
 # API Routes
 
 @app.get("/")
 async def root():
     return {"message": "Notes App API"}
 
+@app.post("/api/auth/login", response_model=LoginResponse)
+async def login(login_data: LoginRequest):
+    """Login and get access token"""
+    if login_data.username != USERNAME:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password"
+        )
+    if not verify_password(login_data.password, PASSWORD_HASH):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password"
+        )
+    
+    access_token = create_access_token(data={"sub": login_data.username})
+    return LoginResponse(access_token=access_token)
+
+@app.get("/api/auth/me")
+async def get_current_user_info(current_user: str = Depends(get_current_user)):
+    """Get current user information"""
+    return {"username": current_user}
+
 @app.get("/api/notes", response_model=List[NoteResponse])
-async def get_notes():
+async def get_notes(current_user: str = Depends(get_current_user)):
     """Get all notes"""
     metadata = load_metadata()
     notes = []
@@ -166,7 +213,7 @@ async def get_notes():
     return notes
 
 @app.get("/api/notes/{note_id}", response_model=NoteResponse)
-async def get_note(note_id: str):
+async def get_note(note_id: str, current_user: str = Depends(get_current_user)):
     """Get a single note"""
     metadata = load_metadata()
     file_path = get_note_path(note_id)
@@ -194,7 +241,7 @@ async def get_note(note_id: str):
     )
 
 @app.post("/api/notes", response_model=NoteResponse)
-async def create_note(note: NoteCreate):
+async def create_note(note: NoteCreate, current_user: str = Depends(get_current_user)):
     """Create a new note"""
     note_id = f"note-{int(datetime.now().timestamp() * 1000)}-{os.urandom(4).hex()}"
     file_path = get_note_path(note_id)
@@ -227,7 +274,7 @@ async def create_note(note: NoteCreate):
     )
 
 @app.put("/api/notes/{note_id}", response_model=NoteResponse)
-async def update_note(note_id: str, note: NoteUpdate):
+async def update_note(note_id: str, note: NoteUpdate, current_user: str = Depends(get_current_user)):
     """Update a note"""
     metadata = load_metadata()
     file_path = get_note_path(note_id)
@@ -276,7 +323,7 @@ async def update_note(note_id: str, note: NoteUpdate):
     )
 
 @app.delete("/api/notes/{note_id}")
-async def delete_note(note_id: str):
+async def delete_note(note_id: str, current_user: str = Depends(get_current_user)):
     """Soft delete a note"""
     metadata = load_metadata()
     
@@ -293,7 +340,7 @@ async def delete_note(note_id: str):
 # Sync endpoints
 
 @app.get("/api/sync/notes", response_model=List[SyncNote])
-async def sync_notes(since: Optional[str] = None):
+async def sync_notes(since: Optional[str] = None, current_user: str = Depends(get_current_user)):
     """Get notes changed since timestamp"""
     metadata = load_metadata()
     notes = []
@@ -339,7 +386,7 @@ async def sync_notes(since: Optional[str] = None):
     return notes
 
 @app.post("/api/sync/push")
-async def sync_push(request: SyncPushRequest):
+async def sync_push(request: SyncPushRequest, current_user: str = Depends(get_current_user)):
     """Push local changes to server"""
     metadata = load_metadata()
     results = []

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import * as db from '../services/db.js'
 import { syncAll } from '../services/sync.js'
 import { useNotesStore } from './notes.js'
+import { useAuthStore } from './auth.js'
 
 export const useSyncStore = defineStore('sync', () => {
   const isSyncing = ref(false)
@@ -22,6 +23,13 @@ export const useSyncStore = defineStore('sync', () => {
     if (isSyncing.value) return
     if (typeof navigator === 'undefined' || !navigator.onLine) {
       console.log('Offline: cannot sync')
+      return
+    }
+    
+    // Check authentication
+    const authStore = useAuthStore()
+    if (!authStore.isAuthenticated) {
+      console.log('Not authenticated: cannot sync')
       return
     }
     
