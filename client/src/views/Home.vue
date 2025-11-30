@@ -89,10 +89,10 @@
       <!-- Status -->
       <div class="p-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
         <div class="flex items-center gap-2">
-          <span :class="navigator.onLine ? 'text-green-500' : 'text-red-500'">
-            {{ navigator.onLine ? '●' : '○' }}
+          <span :class="isOnline ? 'text-green-500' : 'text-red-500'">
+            {{ isOnline ? '●' : '○' }}
           </span>
-          <span>{{ navigator.onLine ? 'Online' : 'Offline' }}</span>
+          <span>{{ isOnline ? 'Online' : 'Offline' }}</span>
         </div>
         <div v-if="lastSyncAt" class="mt-1">
           Synced: {{ formatTime(lastSyncAt) }}
@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotesStore } from '../stores/notes'
 import { useSyncStore } from '../stores/sync'
@@ -127,6 +127,7 @@ const notesStore = useNotesStore()
 const syncStore = useSyncStore()
 
 const searchQuery = ref('')
+const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const selectedNoteId = computed(() => notesStore.selectedNoteId)
 const filteredNotes = computed(() => notesStore.filteredNotes)
 const allTags = computed(() => notesStore.allTags)
@@ -134,6 +135,28 @@ const selectedTag = computed(() => notesStore.selectedTag)
 const isSyncing = computed(() => syncStore.isSyncing)
 const lastSyncAt = computed(() => syncStore.lastSyncAt)
 const conflicts = computed(() => syncStore.conflicts)
+
+// Update online status
+function updateOnlineStatus() {
+  if (typeof navigator !== 'undefined') {
+    isOnline.value = navigator.onLine
+  }
+}
+
+onMounted(() => {
+  updateOnlineStatus()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', updateOnlineStatus)
+    window.addEventListener('offline', updateOnlineStatus)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('online', updateOnlineStatus)
+    window.removeEventListener('offline', updateOnlineStatus)
+  }
+})
 
 function previewContent(content) {
   if (!content) return 'No content'

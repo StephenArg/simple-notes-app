@@ -108,7 +108,7 @@ export function determineSyncAction(note, serverNote) {
  * Sync all notes
  */
 export async function syncAll() {
-  if (!navigator.onLine) {
+  if (typeof navigator === 'undefined' || !navigator.onLine) {
     console.log('Offline: skipping sync')
     return { success: false, reason: 'offline' }
   }

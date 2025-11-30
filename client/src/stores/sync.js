@@ -20,7 +20,7 @@ export const useSyncStore = defineStore('sync', () => {
   
   async function sync() {
     if (isSyncing.value) return
-    if (!navigator.onLine) {
+    if (typeof navigator === 'undefined' || !navigator.onLine) {
       console.log('Offline: cannot sync')
       return
     }

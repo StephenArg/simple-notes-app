@@ -15,14 +15,16 @@ onMounted(() => {
   syncStore.loadLocalNotes()
   
   // If online, sync with server
-  if (navigator.onLine) {
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
     syncStore.sync()
   }
   
   // Listen for online event
-  window.addEventListener('online', () => {
-    syncStore.sync()
-  })
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+      syncStore.sync()
+    })
+  }
 })
 </script>
 

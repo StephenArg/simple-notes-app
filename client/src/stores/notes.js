@@ -102,7 +102,7 @@ export const useNotesStore = defineStore('notes', () => {
     await updateNote(id, { locallyDeleted: true })
     
     // If online, try to delete on server immediately
-    if (navigator.onLine) {
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
       try {
         const { syncPush } = await import('../services/api.js')
         await syncPush([{ id, deleted: true }])
