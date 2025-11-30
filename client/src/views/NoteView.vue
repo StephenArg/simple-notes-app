@@ -45,7 +45,6 @@
           </button>
           <button
             @click="toggleSplitView"
-            v-if="editorMode === 'preview'"
             class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             {{ splitView ? 'Single' : 'Split' }}
@@ -59,105 +58,105 @@
     </div>
     
     <!-- Editor/Preview Area -->
-    <div class="flex-1 overflow-hidden flex flex-col" :class="{ 'flex-row': splitView && editorMode === 'preview' }">
+    <div class="flex-1 overflow-hidden flex" :class="{ 'flex-row': splitView, 'flex-col': !splitView }">
       <!-- Editor -->
       <div 
-        v-if="editorMode === 'edit' || (editorMode === 'preview' && splitView)"
-        class="flex-1 overflow-hidden flex flex-col border-r border-gray-200 dark:border-gray-700"
-        :class="{ 'w-1/2': splitView && editorMode === 'preview' }"
+        v-if="editorMode === 'edit' || splitView"
+        class="flex-1 overflow-hidden flex flex-col"
+        :class="{ 'w-1/2 border-r border-gray-200 dark:border-gray-700': splitView }"
       >
         <!-- Markdown Toolbar -->
-        <div class="flex items-center gap-1 p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex-wrap">
+        <div class="flex items-center gap-1 p-2 border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 flex-wrap">
           <button
             @click="insertMarkdown('**', '**')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Bold"
           >
             <strong>B</strong>
           </button>
           <button
             @click="insertMarkdown('*', '*')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded italic"
+            class="px-2.5 py-1.5 text-sm font-semibold italic text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Italic"
           >
             I
           </button>
           <button
             @click="insertMarkdown('`', '`')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded font-mono"
+            class="px-2.5 py-1.5 text-sm font-mono text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Inline code"
           >
             &lt;/&gt;
           </button>
-          <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <div class="w-px h-5 bg-gray-400 dark:bg-gray-600 mx-1"></div>
           <button
             @click="insertMarkdown('# ', '')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Heading"
           >
             H
           </button>
           <button
             @click="insertMarkdown('## ', '')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Heading 2"
           >
             H2
           </button>
           <button
             @click="insertMarkdown('### ', '')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Heading 3"
           >
             H3
           </button>
-          <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <div class="w-px h-5 bg-gray-400 dark:bg-gray-600 mx-1"></div>
           <button
             @click="insertMarkdown('- ', '')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Bullet list"
           >
             •
           </button>
           <button
             @click="insertMarkdown('1. ', '')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Numbered list"
           >
             1.
           </button>
           <button
             @click="insertMarkdown('> ', '')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Blockquote"
           >
             "
           </button>
-          <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <div class="w-px h-5 bg-gray-400 dark:bg-gray-600 mx-1"></div>
           <button
             @click="insertMarkdown('[', '](url)')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Link"
           >
             🔗
           </button>
           <button
             @click="insertMarkdown('![', '](url)')"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Image"
           >
             🖼️
           </button>
           <button
             @click="insertCodeBlock"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded font-mono"
+            class="px-2.5 py-1.5 text-sm font-mono text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Code block"
           >
             ```
           </button>
           <button
             @click="insertHorizontalRule"
-            class="px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            class="px-2.5 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
             title="Horizontal rule"
           >
             ─
@@ -167,6 +166,7 @@
           ref="editorRef"
           v-model="content"
           @input="onContentChange"
+          @keydown="handleKeydown"
           placeholder="Start writing markdown..."
           class="flex-1 p-4 resize-none border-none outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 font-mono text-sm leading-relaxed"
         />
@@ -174,7 +174,7 @@
       
       <!-- Preview -->
       <div 
-        v-if="editorMode === 'preview'"
+        v-if="editorMode === 'preview' || splitView"
         class="flex-1 overflow-auto p-4 prose prose-sm dark:prose-invert max-w-none"
         :class="{ 'w-1/2': splitView }"
       >
@@ -254,15 +254,17 @@ const autoSaveCountdown = ref(0)
 const countdownTimer = ref(null)
 
 // Track if we have local changes that haven't been saved
+// Compare current input values with the last saved values (localTitle/localContent)
 const hasLocalChanges = computed(() => {
   if (!note.value) return false
-  return localTitle.value !== (note.value.title || '') || 
-         localContent.value !== (note.value.content || '')
+  const titleTrimmed = title.value.trim()
+  const contentTrimmed = content.value.trim()
+  return titleTrimmed !== localTitle.value || contentTrimmed !== localContent.value
 })
 
 const hasUnsavedChanges = computed(() => {
   if (!note.value) return false
-  return hasLocalChanges.value || note.value.currentLocalHash !== note.value.originalHash
+  return hasLocalChanges.value
 })
 
 // Check if save is allowed (needs title and content)
@@ -424,11 +426,20 @@ function goHome() {
 }
 
 function toggleEditMode() {
-  editorMode.value = editorMode.value === 'edit' ? 'preview' : 'edit'
+  // If split view is enabled, keep it enabled but switch the primary mode
+  if (splitView.value) {
+    editorMode.value = editorMode.value === 'edit' ? 'preview' : 'edit'
+  } else {
+    editorMode.value = editorMode.value === 'edit' ? 'preview' : 'edit'
+  }
 }
 
 function toggleSplitView() {
   splitView.value = !splitView.value
+  // When enabling split view, ensure we're in edit mode so both show
+  if (splitView.value && editorMode.value === 'preview') {
+    editorMode.value = 'edit'
+  }
 }
 
 function formatTime(isoString) {
@@ -528,6 +539,97 @@ function insertHorizontalRule() {
   }, 0)
   
   onContentChange()
+}
+
+function handleKeydown(event) {
+  // Handle Enter key for list continuation
+  if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+    const textarea = editorRef.value
+    if (!textarea) return
+    
+    const start = textarea.selectionStart
+    const beforeText = content.value.substring(0, start)
+    const lines = beforeText.split('\n')
+    const currentLine = lines[lines.length - 1]
+    
+    // Check if we're in a list
+    const bulletMatch = currentLine.match(/^(\s*)([-*+])\s/)
+    const numberedMatch = currentLine.match(/^(\s*)(\d+)\.\s/)
+    
+    if (bulletMatch) {
+      // Continue bullet list
+      event.preventDefault()
+      const indent = bulletMatch[1]
+      const bullet = bulletMatch[2]
+      const newLine = '\n' + indent + bullet + ' '
+      
+      const beforeCursor = content.value.substring(0, start)
+      const afterCursor = content.value.substring(start)
+      const newContent = beforeCursor + newLine + afterCursor
+      content.value = newContent
+      
+      setTimeout(() => {
+        textarea.focus()
+        const newCursorPos = start + newLine.length
+        textarea.setSelectionRange(newCursorPos, newCursorPos)
+      }, 0)
+      
+      onContentChange()
+    } else if (numberedMatch) {
+      // Continue numbered list
+      event.preventDefault()
+      const indent = numberedMatch[1]
+      const currentNum = parseInt(numberedMatch[2])
+      const nextNum = currentNum + 1
+      const newLine = '\n' + indent + nextNum + '. '
+      
+      const beforeCursor = content.value.substring(0, start)
+      const afterCursor = content.value.substring(start)
+      const newContent = beforeCursor + newLine + afterCursor
+      content.value = newContent
+      
+      setTimeout(() => {
+        textarea.focus()
+        const newCursorPos = start + newLine.length
+        textarea.setSelectionRange(newCursorPos, newCursorPos)
+      }, 0)
+      
+      onContentChange()
+    } else if (currentLine.trim() === '') {
+      // Check if previous line was a list item - if so, exit list on double Enter
+      if (lines.length >= 2) {
+        const prevLine = lines[lines.length - 2]
+        const prevBulletMatch = prevLine.match(/^(\s*)([-*+])\s/)
+        const prevNumberedMatch = prevLine.match(/^(\s*)(\d+)\.\s/)
+        
+        if (prevBulletMatch || prevNumberedMatch) {
+          // This is a double Enter - exit the list by not adding list marker
+          // Just let the default Enter behavior happen (already on empty line)
+          return
+        }
+      }
+    }
+  }
+  
+  // Handle Backspace to exit list
+  if (event.key === 'Backspace' && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+    const textarea = editorRef.value
+    if (!textarea) return
+    
+    const start = textarea.selectionStart
+    const beforeText = content.value.substring(0, start)
+    const currentLine = beforeText.split('\n').pop()
+    
+    // If we're at the start of a list item (after the bullet/number), delete the list marker
+    const bulletMatch = currentLine.match(/^(\s*)([-*+])\s$/)
+    const numberedMatch = currentLine.match(/^(\s*)(\d+)\.\s$/)
+    
+    if (bulletMatch || numberedMatch) {
+      // User is deleting the list marker - let it happen naturally
+      // The content will update and trigger onContentChange
+      return
+    }
+  }
 }
 </script>
 
