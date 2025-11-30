@@ -344,7 +344,20 @@ async def sync_notes(since: Optional[str] = None, current_user: str = Depends(ge
     """Get notes changed since timestamp"""
     metadata = load_metadata()
     notes = []
-    since_dt = datetime.fromisoformat(since) if since else None
+    since_dt = None
+    if since:
+        # Handle ISO format with 'Z' timezone
+        try:
+            # Python 3.11+ supports 'Z' directly, but for compatibility, replace it
+            since_clean = since.replace('Z', '+00:00')
+            since_dt = datetime.fromisoformat(since_clean)
+        except (ValueError, AttributeError):
+            # Fallback: try parsing without timezone indicator
+            try:
+                since_dt = datetime.fromisoformat(since.replace('Z', ''))
+            except ValueError:
+                # Last resort: parse as naive datetime
+                since_dt = datetime.fromisoformat(since.split('Z')[0])
     
     for note_id, meta in metadata.items():
         updated_at = datetime.fromisoformat(meta.get('updatedAt', datetime.now().isoformat()))

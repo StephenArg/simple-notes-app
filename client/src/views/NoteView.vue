@@ -452,17 +452,10 @@ function updateTags() {
       .split(',')
       .map(t => t.trim())
       .filter(t => t.length > 0)
-    // Preserve current title and content when updating tags
-    const titleTrimmed = title.value.trim()
-    const contentTrimmed = content.value.trim()
+    // Update tags only - don't require title/content
     notesStore.updateNote(note.value.id, { 
-      tags,
-      title: titleTrimmed || note.value.title,
-      content: contentTrimmed || note.value.content
+      tags: tags || []
     })
-    // Update local tracking to reflect the save
-    if (titleTrimmed) localTitle.value = titleTrimmed
-    if (contentTrimmed) localContent.value = contentTrimmed
     scheduleAutoSave()
   }
 }
@@ -625,7 +618,7 @@ function insertCheckbox() {
 function handlePreviewClick(event) {
   // Handle checkbox clicks in preview
   const target = event.target
-  if (target.type === 'checkbox') {
+  if (target && target.type === 'checkbox') {
     event.preventDefault()
     event.stopPropagation()
     
@@ -644,6 +637,7 @@ function handlePreviewClick(event) {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
+      // Match checkbox pattern: - [ ] or - [x] or * [ ] etc.
       if (line.match(/^(\s*)([-*+])\s+\[([ x])\]\s/)) {
         checkboxLineIndices.push(i)
       }
@@ -653,7 +647,8 @@ function handlePreviewClick(event) {
     if (checkboxIndex < checkboxLineIndices.length) {
       const lineIndex = checkboxLineIndices[checkboxIndex]
       const line = lines[lineIndex]
-      const checkboxMatch = line.match(/^(\s*)([-*+])\s+\[([ x])\]\s(.+)$/)
+      // Match the full checkbox line
+      const checkboxMatch = line.match(/^(\s*)([-*+])\s+\[([ x])\]\s(.*)$/)
       
       if (checkboxMatch) {
         // Toggle the checkbox
