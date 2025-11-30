@@ -11,9 +11,16 @@ services:
       - ./server/notes:/app/notes
     environment:
       - PYTHONUNBUFFERED=1
+      - NOTES_USERNAME=${NOTES_USERNAME:-admin}
+      - NOTES_PASSWORD=${NOTES_PASSWORD:-changeme}
+      - NOTES_SECRET_KEY=${NOTES_SECRET_KEY:-change-this-secret-key-in-production}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8000/
       interval: 30s
       timeout: 10s
       retries: 3
@@ -27,12 +34,18 @@ services:
         - VITE_API_BASE=/api
     container_name: notes-app-client
     ports:
-      - "3000:80"  # Single port exposed - reverse proxy should forward here
+      - "8089:80"  # Single port exposed - reverse proxy should forward here
     depends_on:
       - server
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --tries=1
+        - --spider
+        - http://localhost/
       interval: 30s
       timeout: 10s
       retries: 3

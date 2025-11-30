@@ -15,7 +15,7 @@ If you're using [Dockge](https://github.com/louislam/dockge), you can directly c
 
 1. In Dockge, create a new stack
 2. Enter your Git repository URL
-3. Set the compose file path to `docker-compose.yml`
+3. Set the compose file path to `compose.yaml`
 4. Dockge will clone and manage everything automatically
 
 See [DOCKGE.md](./DOCKGE.md) for detailed Dockge setup instructions.
@@ -32,7 +32,7 @@ See [DOCKGE.md](./DOCKGE.md) for detailed Dockge setup instructions.
    ```bash
    # Verify you're in the right directory
    ls -la
-   # You should see: client/, server/, docker-compose.yml
+   # You should see: client/, server/, compose.yaml
    ```
 
 3. **Start the application**:
@@ -40,7 +40,7 @@ See [DOCKGE.md](./DOCKGE.md) for detailed Dockge setup instructions.
    docker-compose up -d
    ```
 
-**Important**: The `docker-compose.yml` file uses relative paths (`./server`, `./client`), so it must be run from the project root directory where both `client/` and `server/` folders exist. This works automatically when using Dockge's git integration.
+**Important**: The `compose.yaml` file uses relative paths (`./server`, `./client`), so it must be run from the project root directory where both `client/` and `server/` folders exist. This works automatically when using Dockge's git integration.
 
 3. **Access the application**:
    - Application: http://localhost:3000 (serves both frontend and API)
@@ -119,7 +119,7 @@ Notes are stored in `./server/notes/` on your host machine. This directory is mo
 
 ## Environment Variables
 
-You can customize the setup using environment variables in `docker-compose.yml`:
+You can customize the setup using environment variables in `compose.yaml`:
 
 - `VITE_API_BASE`: API base URL for the client (default: `/api`)
 - `PYTHONUNBUFFERED`: Python output buffering (set to `1` for real-time logs)
@@ -128,7 +128,7 @@ You can customize the setup using environment variables in `docker-compose.yml`:
 
 ### Port Already in Use
 
-If port 3000 is already in use, modify the port mapping in `docker-compose.yml`:
+If port 3000 is already in use, modify the port mapping in `compose.yaml`:
 
 ```yaml
 client:
@@ -146,7 +146,7 @@ If you encounter permission issues with the notes directory:
 # Linux/Mac
 chmod -R 755 server/notes
 
-# Or run as specific user (add to docker-compose.yml)
+# Or run as specific user (add to compose.yaml)
 user: "1000:1000"
 ```
 
@@ -188,7 +188,7 @@ For production, consider:
    - Configure SSL/TLS at the reverse proxy level
 3. **SSL/TLS**: Configure HTTPS at the reverse proxy
 4. **Backup**: Regular backups of `server/notes/` directory
-5. **Resource Limits**: Add resource constraints in `docker-compose.yml`:
+5. **Resource Limits**: Add resource constraints in `compose.yaml`:
 
 ```yaml
 services:
@@ -248,7 +248,7 @@ server {
 For development, you can mount source code as volumes for hot-reload:
 
 ```yaml
-# Add to docker-compose.yml for development
+# Add to compose.yaml for development
 volumes:
   - ./server:/app
   - ./client/src:/app/src  # For client hot-reload

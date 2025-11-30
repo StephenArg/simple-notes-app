@@ -37,7 +37,7 @@ If you're using [Dockge](https://github.com/louislam/dockge), you can directly c
 
 1. In Dockge, create a new stack
 2. Enter your GitHub repository URL
-3. Set compose file path to `docker-compose.yml`
+3. Set compose file path to `compose.yaml`
 4. Dockge will clone and manage everything automatically
 
 See [DOCKGE.md](./DOCKGE.md) for detailed instructions.

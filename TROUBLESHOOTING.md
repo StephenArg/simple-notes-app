@@ -95,7 +95,7 @@ ls -la client/package-lock.json
 
 If port 8089 is already in use:
 ```yaml
-# In docker-compose.yml, change:
+# In compose.yaml, change:
 ports:
   - "8089:80"  # Change 8089 to another port
 ```

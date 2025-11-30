@@ -6,7 +6,7 @@ The Notes App now includes username/password authentication with JWT tokens for 
 
 ### Docker Compose
 
-Set environment variables in `docker-compose.yml` or use a `.env` file:
+Set environment variables in `compose.yaml` or use a `.env` file:
 
 ```yaml
 environment:

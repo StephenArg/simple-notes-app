@@ -8,12 +8,12 @@ Dockge is a Docker Compose management UI that can clone and manage repositories 
    - **Name**: `simple-notes-app` (or any name you prefer)
    - **Git Repository URL**: `https://github.com/StephenArg/simple-notes-app.git`
    - **Branch**: `main` (or your default branch)
-   - **Compose File Path**: `compose.yaml` (or `docker-compose.yml` - both work)
+   - **Compose File Path**: `compose.yaml`
 
 2. **Dockge will automatically:**
    - Clone the repository
    - Navigate to the directory
-   - Use the `docker-compose.yml` file
+   - Use the `compose.yaml` file
 
 3. **Start the stack:**
    - Click "Start" in Dockge
@@ -21,7 +21,7 @@ Dockge is a Docker Compose management UI that can clone and manage repositories 
 
 ## Important Notes
 
-- The `docker-compose.yml` uses relative paths (`./server`, `./client`), which works perfectly when Dockge clones the repo
+- The `compose.yaml` uses relative paths (`./server`, `./client`), which works perfectly when Dockge clones the repo
 - Dockge will clone the repo to its stacks directory (typically `/opt/stacks/your-stack-name/`)
 - The relative paths in the compose file will resolve correctly from the cloned repository root
 
