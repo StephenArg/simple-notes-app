@@ -45,7 +45,8 @@ export function determineSyncAction(note, serverNote) {
     originalHash === currentLocalHash &&
     serverHash !== originalHash &&
     !isServerDeleted &&
-    !locallyDeleted
+    !locallyDeleted &&
+    serverNote
   ) {
     return { action: 'pull', serverNote }
   }
@@ -149,7 +150,7 @@ export async function syncAll() {
     // Process server-only notes (new notes from server)
     for (const serverNote of serverNotes) {
       if (!localNotes.find(n => n.id === serverNote.id)) {
-        if (!serverNote.deleted) {
+        if (!serverNote.deleted && serverNote) {
           actions.push({ action: 'pull', serverNote })
         }
       }
@@ -194,14 +195,18 @@ export async function syncAll() {
     for (const action of actions) {
       if (action.action === 'pull') {
         const serverNote = action.serverNote
-        const newHash = serverNote.hash
+        if (!serverNote) {
+          console.warn('Pull action missing serverNote', action)
+          continue
+        }
+        const newHash = serverNote.hash || ''
         await db.saveNote({
           id: serverNote.id,
-          title: serverNote.title,
-          content: serverNote.content,
-          tags: serverNote.tags || [],
-          createdAt: serverNote.createdAt,
-          updatedAt: serverNote.updatedAt,
+          title: serverNote.title || 'Untitled',
+          content: serverNote.content || '',
+          tags: Array.isArray(serverNote.tags) ? [...serverNote.tags] : [],
+          createdAt: serverNote.createdAt || new Date().toISOString(),
+          updatedAt: serverNote.updatedAt || new Date().toISOString(),
           originalHash: newHash,
           currentLocalHash: newHash,
           serverDeleted: serverNote.deleted || false,

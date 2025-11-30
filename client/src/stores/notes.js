@@ -90,24 +90,37 @@ export const useNotesStore = defineStore('notes', () => {
     const note = notes.value.find(n => n.id === id)
     if (!note) return
     
-    const updatedNote = {
-      ...note,
-      ...updates,
-      updatedAt: new Date().toISOString()
+    // Create a plain object (not a Proxy) to avoid IndexedDB cloning issues
+    const plainNote = {
+      id: note.id,
+      title: note.title || '',
+      content: note.content || '',
+      tags: Array.isArray(note.tags) ? [...note.tags] : [],
+      createdAt: note.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      originalHash: note.originalHash || '',
+      currentLocalHash: note.currentLocalHash || '',
+      serverDeleted: note.serverDeleted || false,
+      locallyDeleted: note.locallyDeleted || false
     }
+    
+    // Apply updates
+    if (updates.title !== undefined) plainNote.title = updates.title
+    if (updates.content !== undefined) plainNote.content = updates.content
+    if (updates.tags !== undefined) plainNote.tags = Array.isArray(updates.tags) ? [...updates.tags] : []
     
     // Recompute hash if content changed
     if (updates.content !== undefined) {
-      updatedNote.currentLocalHash = await sha256(updates.content)
+      plainNote.currentLocalHash = await sha256(updates.content)
     }
     
-    await db.saveNote(updatedNote)
+    await db.saveNote(plainNote)
     const index = notes.value.findIndex(n => n.id === id)
     if (index !== -1) {
       // Use Vue's reactive update - replace the entire array to ensure reactivity
       notes.value = [
         ...notes.value.slice(0, index),
-        updatedNote,
+        plainNote,
         ...notes.value.slice(index + 1)
       ]
     }
