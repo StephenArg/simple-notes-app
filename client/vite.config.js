@@ -9,11 +9,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       workbox: {
-        // Precache all static assets
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot,json}'],
+        // Precache all static assets including HTML
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot,json,webmanifest}'],
         // Don't exclude anything from precaching
-        globIgnores: ['**/node_modules/**/*'],
+        globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'],
         // Maximum file size to precache (50MB)
         maximumFileSizeToCacheInBytes: 50 * 1024 * 1024,
         runtimeCaching: [

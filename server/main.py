@@ -351,6 +351,9 @@ async def sync_notes(since: Optional[str] = None, current_user: str = Depends(ge
             # Python 3.11+ supports 'Z' directly, but for compatibility, replace it
             since_clean = since.replace('Z', '+00:00')
             since_dt = datetime.fromisoformat(since_clean)
+            # Convert to naive datetime for comparison (remove timezone info)
+            if since_dt.tzinfo is not None:
+                since_dt = since_dt.replace(tzinfo=None)
         except (ValueError, AttributeError):
             # Fallback: try parsing without timezone indicator
             try:
@@ -360,7 +363,15 @@ async def sync_notes(since: Optional[str] = None, current_user: str = Depends(ge
                 since_dt = datetime.fromisoformat(since.split('Z')[0])
     
     for note_id, meta in metadata.items():
-        updated_at = datetime.fromisoformat(meta.get('updatedAt', datetime.now().isoformat()))
+        updated_at_str = meta.get('updatedAt', datetime.now().isoformat())
+        try:
+            updated_at = datetime.fromisoformat(updated_at_str)
+            # Convert to naive datetime if it has timezone info
+            if updated_at.tzinfo is not None:
+                updated_at = updated_at.replace(tzinfo=None)
+        except (ValueError, AttributeError):
+            # If parsing fails, skip this note or use current time
+            updated_at = datetime.now()
         
         if since_dt and updated_at <= since_dt:
             continue
