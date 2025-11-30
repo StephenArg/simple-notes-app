@@ -315,7 +315,7 @@ const renderedMarkdown = computed(() => {
 
 const previousNoteId = ref(null)
 
-watch(note, (newNote) => {
+watch(note, (newNote, oldNote) => {
   if (newNote) {
     // Only update if we switched to a different note (avoid overwriting user input while editing)
     if (previousNoteId.value !== newNote.id) {
@@ -326,11 +326,25 @@ watch(note, (newNote) => {
       localContent.value = newNote.content || ''
       previousNoteId.value = newNote.id
       cancelAutoSave()
+    } else if (oldNote && newNote.id === oldNote.id) {
+      // Same note but content might have been updated externally
+      // Only update if the note actually changed (not just a reactive update)
+      if (newNote.title !== oldNote.title || newNote.content !== oldNote.content) {
+        // Only update if user hasn't made local changes
+        const titleTrimmed = title.value.trim()
+        const contentTrimmed = content.value.trim()
+        if (titleTrimmed === oldNote.title && contentTrimmed === oldNote.content) {
+          title.value = newNote.title || ''
+          content.value = newNote.content || ''
+          localTitle.value = newNote.title || ''
+          localContent.value = newNote.content || ''
+        }
+      }
     }
   } else {
     previousNoteId.value = null
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 watch(() => route.params.id, (id) => {
   if (id) {

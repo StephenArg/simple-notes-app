@@ -14,7 +14,14 @@ export const useNotesStore = defineStore('notes', () => {
   })
   
   const filteredNotes = computed(() => {
-    let filtered = notes.value.filter(n => !n.locallyDeleted && !n.serverDeleted)
+    let filtered = notes.value.filter(n => {
+      // Filter out deleted notes
+      if (n.locallyDeleted || n.serverDeleted) return false
+      // Filter out empty notes (Untitled with no content)
+      const hasContent = n.content && n.content.trim().length > 0
+      const hasTitle = n.title && n.title.trim().length > 0 && n.title.trim() !== 'Untitled'
+      return hasContent || hasTitle
+    })
     
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()
@@ -66,8 +73,10 @@ export const useNotesStore = defineStore('notes', () => {
       locallyDeleted: false
     }
     
+    // Save to IndexedDB first
     await db.saveNote(note)
-    notes.value.push(note)
+    // Then add to reactive array (use spread to ensure reactivity)
+    notes.value = [...notes.value, note]
     selectedNoteId.value = id
     return note
   }
@@ -90,7 +99,12 @@ export const useNotesStore = defineStore('notes', () => {
     await db.saveNote(updatedNote)
     const index = notes.value.findIndex(n => n.id === id)
     if (index !== -1) {
-      notes.value[index] = updatedNote
+      // Use Vue's reactive update - replace the entire array to ensure reactivity
+      notes.value = [
+        ...notes.value.slice(0, index),
+        updatedNote,
+        ...notes.value.slice(index + 1)
+      ]
     }
   }
   
