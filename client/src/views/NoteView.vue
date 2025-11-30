@@ -161,6 +161,13 @@
           >
             ─
           </button>
+          <button
+            @click="insertCheckbox"
+            class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+            title="Checkbox"
+          >
+            ☐
+          </button>
         </div>
         <textarea
           ref="editorRef"
@@ -232,6 +239,12 @@ import { useNotesStore } from '../stores/notes'
 import { useSettingsStore } from '../stores/settings'
 import { marked } from 'marked'
 
+// Configure marked for GFM (GitHub Flavored Markdown) with checkbox support
+marked.setOptions({
+  gfm: true,
+  breaks: true
+})
+
 const route = useRoute()
 const router = useRouter()
 const notesStore = useNotesStore()
@@ -300,14 +313,22 @@ const renderedMarkdown = computed(() => {
   }
 })
 
+const previousNoteId = ref(null)
+
 watch(note, (newNote) => {
   if (newNote) {
-    title.value = newNote.title || ''
-    content.value = newNote.content || ''
-    tagsInput.value = newNote.tags?.join(', ') || ''
-    localTitle.value = newNote.title || ''
-    localContent.value = newNote.content || ''
-    cancelAutoSave()
+    // Only update if we switched to a different note (avoid overwriting user input while editing)
+    if (previousNoteId.value !== newNote.id) {
+      title.value = newNote.title || ''
+      content.value = newNote.content || ''
+      tagsInput.value = newNote.tags?.join(', ') || ''
+      localTitle.value = newNote.title || ''
+      localContent.value = newNote.content || ''
+      previousNoteId.value = newNote.id
+      cancelAutoSave()
+    }
+  } else {
+    previousNoteId.value = null
   }
 }, { immediate: true })
 
@@ -383,18 +404,26 @@ async function saveNote() {
   
   // Don't save if title or content is empty
   if (!titleTrimmed || !contentTrimmed) {
+    console.log('Save blocked: title or content empty', { titleTrimmed, contentTrimmed })
     return
   }
   
   cancelAutoSave()
-  await notesStore.updateNote(note.value.id, { 
-    content: contentTrimmed,
-    title: titleTrimmed
-  })
   
-  // Update local tracking
-  localTitle.value = titleTrimmed
-  localContent.value = contentTrimmed
+  try {
+    await notesStore.updateNote(note.value.id, { 
+      content: contentTrimmed,
+      title: titleTrimmed,
+      tags: note.value.tags || [] // Preserve existing tags
+    })
+    
+    // Update local tracking
+    localTitle.value = titleTrimmed
+    localContent.value = contentTrimmed
+    console.log('Note saved successfully')
+  } catch (error) {
+    console.error('Failed to save note:', error)
+  }
 }
 
 async function manualSave() {
@@ -408,7 +437,17 @@ function updateTags() {
       .split(',')
       .map(t => t.trim())
       .filter(t => t.length > 0)
-    notesStore.updateNote(note.value.id, { tags })
+    // Preserve current title and content when updating tags
+    const titleTrimmed = title.value.trim()
+    const contentTrimmed = content.value.trim()
+    notesStore.updateNote(note.value.id, { 
+      tags,
+      title: titleTrimmed || note.value.title,
+      content: contentTrimmed || note.value.content
+    })
+    // Update local tracking to reflect the save
+    if (titleTrimmed) localTitle.value = titleTrimmed
+    if (contentTrimmed) localContent.value = contentTrimmed
     scheduleAutoSave()
   }
 }
@@ -541,6 +580,33 @@ function insertHorizontalRule() {
   onContentChange()
 }
 
+function insertCheckbox() {
+  if (!editorRef.value) return
+  
+  const textarea = editorRef.value
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const beforeText = content.value.substring(0, start)
+  const afterText = content.value.substring(end)
+  
+  // Insert checkbox at the start of the line
+  const lines = beforeText.split('\n')
+  const currentLine = lines[lines.length - 1]
+  const indent = currentLine.match(/^(\s*)/)?.[1] || ''
+  const checkbox = indent + '- [ ] '
+  
+  const newText = beforeText + checkbox + afterText
+  content.value = newText
+  
+  setTimeout(() => {
+    textarea.focus()
+    const newCursorPos = start + checkbox.length
+    textarea.setSelectionRange(newCursorPos, newCursorPos)
+  }, 0)
+  
+  onContentChange()
+}
+
 function handleKeydown(event) {
   // Handle Enter key for list continuation
   if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
@@ -660,6 +726,22 @@ function handleKeydown(event) {
 
 .markdown-content li {
   @apply mb-2;
+}
+
+.markdown-content ul li {
+  @apply list-disc;
+}
+
+.markdown-content ol li {
+  @apply list-decimal;
+}
+
+.markdown-content hr {
+  @apply my-6 border-t border-gray-300 dark:border-gray-600;
+}
+
+.markdown-content input[type="checkbox"] {
+  @apply mr-2;
 }
 
 .markdown-content code {
